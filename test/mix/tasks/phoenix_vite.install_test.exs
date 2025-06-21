@@ -6,19 +6,25 @@ defmodule Mix.Tasks.PhoenixVite.InstallTest do
     phx_test_project()
     |> Igniter.compose_task("phoenix_vite.install", [])
     |> assert_creates("assets/vite.config.mjs", """
-    export default {
+    import { defineConfig } from 'vite'
+    import tailwindcss from "@tailwindcss/vite";
+
+    export default defineConfig({
       server: {
-        port: 5172,
+        port: 5173,
         strictPort: true,
         cors: { origin: "http://localhost:4000" },
       },
       build: {
         manifest: true,
-        rollupOptions: { input: "js/app.js" },
+        rollupOptions: {
+          input: ["js/app.js", "css/app.css"],
+        },
         outDir: "../priv/static",
         emptyOutDir: true,
-      }
-    };
+      },
+      plugins: [tailwindcss()]
+    });
     """)
   end
 
@@ -34,10 +40,11 @@ defmodule Mix.Tasks.PhoenixVite.InstallTest do
   end
 
   test "moves static files to assets" do
-    phx_test_project()
-    |> Igniter.compose_task("phoenix_vite.install", [])
-    |> assert_creates("assets/public/static/favicon.ico")
-    |> assert_rms("priv/static/favicon.ico")
+    igniter =
+      phx_test_project()
+      |> Igniter.compose_task("phoenix_vite.install", [])
+
+    assert {"priv/static/favicon.ico", "assets/public/favicon.ico"} in igniter.moves
   end
 
   describe "assets/package.json" do
