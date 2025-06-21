@@ -1,0 +1,73 @@
+defmodule Mix.Tasks.PhoenixVite.InstallTest do
+  use ExUnit.Case, async: true
+  import Igniter.Test
+
+  test "creates minimal vite.config.mjs" do
+    phx_test_project()
+    |> Igniter.compose_task("phoenix_vite.install", [])
+    |> assert_creates("assets/vite.config.mjs", """
+    export default {
+      server: {
+        port: 5172,
+        strictPort: true,
+        cors: { origin: "http://localhost:4000" },
+      },
+      build: {
+        manifest: true,
+        rollupOptions: { input: "js/app.js" },
+        outDir: "../priv/static",
+        emptyOutDir: true,
+      }
+    };
+    """)
+  end
+
+  test "inserts import polyfill to app.js" do
+    phx_test_project()
+    |> Igniter.compose_task("phoenix_vite.install", [])
+    |> assert_has_patch("assets/js/app.js", """
+    1 + |import "vite/modulepreload-polyfill";
+    2 + |import "../css/app.css";
+    1  3   |// If you want to use Phoenix channels, run `mix help phx.gen.channel`
+    2  4   |// to get started and then uncomment the line below.
+    """)
+  end
+
+  test "moves static files to assets" do
+    phx_test_project()
+    |> Igniter.compose_task("phoenix_vite.install", [])
+    |> assert_creates("assets/public/static/favicon.ico")
+    |> assert_rms("priv/static/favicon.ico")
+  end
+
+  describe "assets/package.json" do
+    test "is created if run with bun flag" do
+      phx_test_project()
+      |> Igniter.compose_task("phoenix_vite.install", ["--bun"])
+      |> assert_creates("assets/package.json", """
+      {
+        "workspaces": [
+          "../deps/*"
+        ],
+        "dependencies": {
+          "phoenix": "workspace:*",
+          "phoenix_html": "workspace:*",
+          "phoenix_live_view": "workspace:*",
+          "tailwindcss": "^4.1.0",
+          "topbar": "^3.0.0"
+        },
+        "devDependencies": {
+          "@tailwindcss/vite": "^4.1.10",
+          "vite": "^6.3.5"
+        }
+      }
+      """)
+    end
+
+    test "is not created if run without bun flag" do
+      phx_test_project()
+      |> Igniter.compose_task("phoenix_vite.install", ["--no-bun"])
+      |> refute_creates("assets/package.json")
+    end
+  end
+end

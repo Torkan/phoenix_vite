@@ -1,18 +1,12 @@
 defmodule PhoenixVite do
   @moduledoc """
-  Documentation for `PhoenixVite`.
+  `PhoenixVite` integrates the `vite` built tool with `:phoenix`.
+
+  ## Installation
+
+  ### JS Runtime
+
+  `vite` needs a javascript runtime to be executed within. You can either use
+  `node` or the `:bun` elixir package.
   """
-
-  @doc """
-  Hello world.
-
-  ## Examples
-
-      iex> PhoenixVite.hello()
-      :world
-
-  """
-  def hello do
-    :world
-  end
 end

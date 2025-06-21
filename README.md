@@ -1,6 +1,12 @@
 # PhoenixVite
 
-**TODO: Add description**
+```sh
+mix phx.new …
+mix igniter phoenix_vite
+mix deps.clean --unlock --unused
+mix deps.get
+mix assets.setup
+```
 
 ## Installation
 
@@ -18,4 +24,3 @@ end
 Documentation can be generated with [ExDoc](https://github.com/elixir-lang/ex_doc)
 and published on [HexDocs](https://hexdocs.pm). Once published, the docs can
 be found at <https://hexdocs.pm/phoenix_vite>.
-
