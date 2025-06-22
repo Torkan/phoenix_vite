@@ -43,36 +43,4 @@ defmodule Mix.Tasks.PhoenixVite.InstallTest do
 
     assert {"priv/static/favicon.ico", "assets/public/favicon.ico"} in igniter.moves
   end
-
-  describe "assets/package.json" do
-    test "is created if run with bun flag" do
-      phx_test_project()
-      |> Igniter.compose_task("phoenix_vite.install", ["--bun"])
-      |> assert_creates("assets/package.json", """
-      {
-        "workspaces": [
-          "../deps/*"
-        ],
-        "dependencies": {
-          "phoenix": "workspace:*",
-          "phoenix_html": "workspace:*",
-          "phoenix_live_view": "workspace:*",
-          "topbar": "^3.0.0"
-        },
-        "devDependencies": {
-          "tailwindcss": "^4.1.0",
-          "daisyui": "^5.0.0",
-          "@tailwindcss/vite": "^4.1.0",
-          "vite": "^6.3.0"
-        }
-      }
-      """)
-    end
-
-    test "is not created if run without bun flag" do
-      phx_test_project()
-      |> Igniter.compose_task("phoenix_vite.install", ["--no-bun"])
-      |> refute_creates("assets/package.json")
-    end
-  end
 end

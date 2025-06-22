@@ -47,13 +47,13 @@ defmodule Mix.Tasks.PhoenixVite.Install do
         |> PhoenixVite.Igniter.add_module_preload_polyfill()
         |> PhoenixVite.Igniter.use_vite_public_folder_for_static_assets()
         |> PhoenixVite.Igniter.link_root_layout_to_vite(app_name, endpoint, web_module)
-        |> PhoenixVite.Igniter.adjust_assets_task_definitions()
         |> PhoenixVite.Igniter.remove_default_assets_handling(app_name, endpoint)
+        |> PhoenixVite.Igniter.adjust_js_dependency_management()
 
       if igniter.args.options[:bun] do
         PhoenixVite.Igniter.add_bun(igniter, app_name, endpoint)
       else
-        igniter
+        PhoenixVite.Igniter.add_local_node(igniter, app_name, endpoint)
       end
     end
   else

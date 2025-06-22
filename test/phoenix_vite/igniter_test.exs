@@ -123,25 +123,6 @@ defmodule PhoenixVite.IgniterTest do
     end
   end
 
-  describe "adjust_assets_task_definitions/1" do
-    test "updates tasks" do
-      phx_test_project()
-      |> ViteIgniter.adjust_assets_task_definitions()
-      |> assert_has_patch("mix.exs", """
-      77    - |      "assets.setup": ["tailwind.install --if-missing", "esbuild.install --if-missing"],
-      78    - |      "assets.build": ["tailwind test", "esbuild test"],
-         77 + |      "assets.setup": ["bun.install --if-missing", "bun assets install"],
-         78 + |      "assets.build": ["bun vite build"],
-      79 79   |      "assets.deploy": [
-      80    - |        "tailwind test --minify",
-      81    - |        "esbuild test --minify",
-      82    - |        "phx.digest"
-         80 + |        "assets.build"
-      83 81   |      ]
-      """)
-    end
-  end
-
   describe "remove_default_assets_handling/3" do
     test "removes watchers from dev.exs" do
       phx_test_project()
@@ -200,22 +181,10 @@ defmodule PhoenixVite.IgniterTest do
     end
   end
 
-  describe "add_bun/3" do
-    test "adds dependency on bun package" do
-      phx_test_project()
-      |> ViteIgniter.add_bun(:test, TestWeb.Endpoint)
-      |> assert_has_patch("mix.exs", """
-      62 + |      {:bun, "~> 1.4",
-      63 + |       runtime: Mix.env() == :dev,
-      64 + |       github: "LostKobrakai/elixir_bun",
-      65 + |       branch: "LostKobrakai-patch-1",
-      66 + |       override: true}
-      """)
-    end
-
+  describe "adjust_js_dependency_management/1" do
     test "adds package.json" do
       phx_test_project()
-      |> ViteIgniter.add_bun(:test, TestWeb.Endpoint)
+      |> ViteIgniter.adjust_js_dependency_management()
       |> assert_creates("assets/package.json", """
       {
         "workspaces": [
@@ -234,6 +203,46 @@ defmodule PhoenixVite.IgniterTest do
           "vite": "^6.3.0"
         }
       }
+      """)
+    end
+
+    test "replaces vendored depedendencies with npm ones" do
+      phx_test_project()
+      |> ViteIgniter.adjust_js_dependency_management()
+      |> assert_rms([
+        "assets/vendor/topbar.js",
+        "assets/vendor/daisyui.js",
+        "assets/vendor/daisyui-theme.js"
+      ])
+      |> assert_has_patch("assets/js/app.js", """
+      25    - |import topbar from "../vendor/topbar"
+         25 + |import topbar from "topbar"
+      """)
+      |> assert_has_patch("assets/css/app.css", """
+      16     - |@plugin "../vendor/daisyui" {
+          16 + |@plugin "daisyui" {
+      """)
+      |> assert_has_patch("assets/css/app.css", """
+      24     - |@plugin "../vendor/daisyui-theme" {
+          24 + |@plugin "daisyui/theme" {
+      """)
+      |> assert_has_patch("assets/css/app.css", """
+      59     - |@plugin "../vendor/daisyui-theme" {
+          59 + |@plugin "daisyui/theme" {
+      """)
+    end
+  end
+
+  describe "add_bun/3" do
+    test "adds dependency on bun package" do
+      phx_test_project()
+      |> ViteIgniter.add_bun(:test, TestWeb.Endpoint)
+      |> assert_has_patch("mix.exs", """
+      62 + |      {:bun, "~> 1.4",
+      63 + |       runtime: Mix.env() == :dev,
+      64 + |       github: "LostKobrakai/elixir_bun",
+      65 + |       branch: "LostKobrakai-patch-1",
+      66 + |       override: true}
       """)
     end
 
@@ -264,29 +273,53 @@ defmodule PhoenixVite.IgniterTest do
       |> assert_has_task("assets.setup", [])
     end
 
-    test "replaces vendored depedendencies with npm ones" do
+    test "updates tasks" do
       phx_test_project()
       |> ViteIgniter.add_bun(:test, TestWeb.Endpoint)
-      |> assert_rms([
-        "assets/vendor/topbar.js",
-        "assets/vendor/daisyui.js",
-        "assets/vendor/daisyui-theme.js"
-      ])
-      |> assert_has_patch("assets/js/app.js", """
-      25    - |import topbar from "../vendor/topbar"
-         25 + |import topbar from "topbar"
+      |> assert_has_patch("mix.exs", """
+      77    - |      "assets.setup": ["tailwind.install --if-missing", "esbuild.install --if-missing"],
+      78    - |      "assets.build": ["tailwind test", "esbuild test"],
+         82 + |      "assets.setup": ["bun.install --if-missing", "bun assets install"],
+         83 + |      "assets.build": ["bun vite build"],
+      79 84   |      "assets.deploy": [
+      80    - |        "tailwind test --minify",
+      81    - |        "esbuild test --minify",
+      82    - |        "phx.digest"
+         85 + |        "assets.build"
+      83 86   |      ]
       """)
-      |> assert_has_patch("assets/css/app.css", """
-      16     - |@plugin "../vendor/daisyui" {
-          16 + |@plugin "daisyui" {
+    end
+  end
+
+  describe "add_local_node/3" do
+    test "configures endpoint watcher" do
+      phx_test_project()
+      |> ViteIgniter.add_local_node(:test, TestWeb.Endpoint)
+      |> assert_has_patch("config/dev.exs", """
+      20 + |    vite: {PhoenixVite, :run, ["npx", ~w(vite dev), [cd: "assets"]]}
       """)
-      |> assert_has_patch("assets/css/app.css", """
-      24     - |@plugin "../vendor/daisyui-theme" {
-          24 + |@plugin "daisyui/theme" {
-      """)
-      |> assert_has_patch("assets/css/app.css", """
-      59     - |@plugin "../vendor/daisyui-theme" {
-          59 + |@plugin "daisyui/theme" {
+    end
+
+    test "queues setup tasks" do
+      phx_test_project()
+      |> ViteIgniter.add_local_node(:test, TestWeb.Endpoint)
+      |> assert_has_task("assets.setup", [])
+    end
+
+    test "updates tasks" do
+      phx_test_project()
+      |> ViteIgniter.add_local_node(:test, TestWeb.Endpoint)
+      |> assert_has_patch("mix.exs", """
+      77    - |      "assets.setup": ["tailwind.install --if-missing", "esbuild.install --if-missing"],
+      78    - |      "assets.build": ["tailwind test", "esbuild test"],
+         77 + |      "assets.setup": ["cmd --cd assets npm install"],
+         78 + |      "assets.build": ["cmd --cd assets npx vite build"],
+      79 79   |      "assets.deploy": [
+      80    - |        "tailwind test --minify",
+      81    - |        "esbuild test --minify",
+      82    - |        "phx.digest"
+         80 + |        "assets.build"
+      83 81   |      ]
       """)
     end
   end

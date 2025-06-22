@@ -142,25 +142,6 @@ if Code.ensure_loaded?(Igniter) do
     end
 
     @doc """
-    Adjust phoenix `assets.*` tasks.
-    """
-    def adjust_assets_task_definitions(igniter) do
-      igniter
-      |> Igniter.Project.TaskAliases.modify_existing_alias("assets.setup", fn zipper ->
-        alias = Sourceror.parse_string!(~s|["bun.install --if-missing", "bun assets install"]|)
-        {:ok, Igniter.Code.Common.replace_code(zipper, alias)}
-      end)
-      |> Igniter.Project.TaskAliases.modify_existing_alias("assets.build", fn zipper ->
-        alias = Sourceror.parse_string!(~s|["bun vite build"]|)
-        {:ok, Igniter.Code.Common.replace_code(zipper, alias)}
-      end)
-      |> Igniter.Project.TaskAliases.modify_existing_alias("assets.deploy", fn zipper ->
-        alias = Sourceror.parse_string!(~s|["assets.build"]|)
-        {:ok, Igniter.Code.Common.replace_code(zipper, alias)}
-      end)
-    end
-
-    @doc """
     Remove esbuild and tailwind applications and integrations
     """
     def remove_default_assets_handling(igniter, app_name, endpoint) do
@@ -199,18 +180,10 @@ if Code.ensure_loaded?(Igniter) do
     end
 
     @doc """
-    Add :bun dependency to project integrated with vite
+    Use package.json to pull in dependencies
     """
-    def add_bun(igniter, app_name, endpoint) do
+    def adjust_js_dependency_management(igniter) do
       igniter
-      |> Igniter.Project.Deps.add_dep(
-        {:bun, "~> 1.4",
-         runtime: quote(do: Mix.env() == :dev),
-         github: "LostKobrakai/elixir_bun",
-         branch: "LostKobrakai-patch-1",
-         override: true},
-        append?: true
-      )
       |> Igniter.create_new_file("assets/package.json", """
       {
         "workspaces": [
@@ -245,6 +218,21 @@ if Code.ensure_loaded?(Igniter) do
       |> Igniter.rm("assets/vendor/topbar.js")
       |> Igniter.rm("assets/vendor/daisyui.js")
       |> Igniter.rm("assets/vendor/daisyui-theme.js")
+    end
+
+    @doc """
+    Add :bun dependency to project integrated with vite
+    """
+    def add_bun(igniter, app_name, endpoint) do
+      igniter
+      |> Igniter.Project.Deps.add_dep(
+        {:bun, "~> 1.4",
+         runtime: quote(do: Mix.env() == :dev),
+         github: "LostKobrakai/elixir_bun",
+         branch: "LostKobrakai-patch-1",
+         override: true},
+        append?: true
+      )
       |> Igniter.Project.Config.configure("config.exs", :bun, [:version], "1.2.16")
       |> Igniter.Project.Config.configure(
         "config.exs",
@@ -265,7 +253,48 @@ if Code.ensure_loaded?(Igniter) do
         [endpoint, :watchers, :vite],
         {:code, Sourceror.parse_string!(~s|{Bun, :install_and_run, [:vite, ~w(dev)]}|)}
       )
+      |> Igniter.Project.TaskAliases.modify_existing_alias("assets.setup", fn zipper ->
+        alias = Sourceror.parse_string!(~s|["bun.install --if-missing", "bun assets install"]|)
+        {:ok, Igniter.Code.Common.replace_code(zipper, alias)}
+      end)
+      |> Igniter.Project.TaskAliases.modify_existing_alias("assets.build", fn zipper ->
+        alias = Sourceror.parse_string!(~s|["bun vite build"]|)
+        {:ok, Igniter.Code.Common.replace_code(zipper, alias)}
+      end)
+      |> Igniter.Project.TaskAliases.modify_existing_alias("assets.deploy", fn zipper ->
+        alias = Sourceror.parse_string!(~s|["assets.build"]|)
+        {:ok, Igniter.Code.Common.replace_code(zipper, alias)}
+      end)
       |> Igniter.add_task("deps.get")
+      |> Igniter.add_task("assets.setup")
+    end
+
+    @doc """
+    Integrate vite with local node/npm installation
+    """
+    def add_local_node(igniter, app_name, endpoint) do
+      igniter
+      |> Igniter.Project.Config.configure(
+        "dev.exs",
+        app_name,
+        [endpoint, :watchers, :vite],
+        {:code,
+         Sourceror.parse_string!("""
+         {PhoenixVite, :run, ["npx", ~w(vite dev), [cd: "assets"]]}
+         """)}
+      )
+      |> Igniter.Project.TaskAliases.modify_existing_alias("assets.setup", fn zipper ->
+        alias = Sourceror.parse_string!(~s|["cmd --cd assets npm install"]|)
+        {:ok, Igniter.Code.Common.replace_code(zipper, alias)}
+      end)
+      |> Igniter.Project.TaskAliases.modify_existing_alias("assets.build", fn zipper ->
+        alias = Sourceror.parse_string!(~s|["cmd --cd assets npx vite build"]|)
+        {:ok, Igniter.Code.Common.replace_code(zipper, alias)}
+      end)
+      |> Igniter.Project.TaskAliases.modify_existing_alias("assets.deploy", fn zipper ->
+        alias = Sourceror.parse_string!(~s|["assets.build"]|)
+        {:ok, Igniter.Code.Common.replace_code(zipper, alias)}
+      end)
       |> Igniter.add_task("assets.setup")
     end
   end
