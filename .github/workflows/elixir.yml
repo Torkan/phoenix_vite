@@ -18,7 +18,7 @@ permissions:
 jobs:
   test:
     runs-on: ubuntu-24.04
-    name: Test on OTP ${{matrix.pair.otp}} / Elixir ${matrix.pair.elixir}}
+    name: Test on OTP ${{matrix.pair.otp}} / Elixir ${{matrix.pair.elixir}}
     strategy:
       fail-fast: false
       matrix:
@@ -35,7 +35,7 @@ jobs:
         uses: erlef/setup-beam@v1
         with:
           otp-version: ${{matrix.pair.otp}}
-          elixir-version: ${matrix.pair.elixir}}
+          elixir-version: ${{matrix.pair.elixir}}
 
       - name: Checkout code
         uses: actions/checkout@v4
