@@ -87,7 +87,12 @@ defmodule PhoenixVite.Components do
     assigns = assign(assigns, manifest: cached_manifest(manifest))
 
     ~H"""
-    <.assets_from_manifest_for_name :for={name <- @names} name={name} manifest={@manifest} to_url={@to_url} />
+    <.assets_from_manifest_for_name
+      :for={name <- @names}
+      name={name}
+      manifest={@manifest}
+      to_url={@to_url}
+    />
     """
   end
 
@@ -106,40 +111,52 @@ defmodule PhoenixVite.Components do
       )
 
     ~H"""
-    <.reference_for_file :for={css <- @chunk["css"]} file={css} to_url={@to_url} />
+    <.reference_for_file :for={css <- @chunk["css"]} file={css} to_url={@to_url} cache />
     <%= for chunk <- @imported_chunks, css <- chunk["css"] do %>
-      <.reference_for_file file={css} to_url={@to_url}/>
+      <.reference_for_file file={css} to_url={@to_url} cache />
     <% end %>
-    <.reference_for_file file={@chunk["file"]} to_url={@to_url}/>
+    <.reference_for_file file={@chunk["file"]} to_url={@to_url} cache />
     <.reference_for_file
       :for={chunk <- @imported_chunks}
       file={chunk}
       rel="modulepreload"
       to_url={@to_url}
+      cache
     />
     """
   end
 
   attr :file, :string, required: true
   attr :to_url, {:fun, 1}, required: true
+  attr :cache, :boolean, default: false
   attr :rest, :global
 
   defp reference_for_file(assigns) do
     ~H"""
-    <script phx-track-static :if={Path.extname(@file) == ".js"} type="module" src={@to_url.(cache_enabled_path(@file))} {@rest}>
+    <script
+      :if={Path.extname(@file) == ".js"}
+      phx-track-static
+      type="module"
+      src={@to_url.(cache_enabled_path(@file, @cache))}
+      {@rest}
+    >
     </script>
     <link
-    :if={Path.extname(@file) == ".css"}
+      :if={Path.extname(@file) == ".css"}
       phx-track-static
       rel="stylesheet"
-      href={@to_url.(cache_enabled_path(@file))}
+      href={@to_url.(cache_enabled_path(@file, @cache))}
       {@rest}
     />
     """
   end
 
-  defp cache_enabled_path(path) do
+  defp cache_enabled_path(path, true) do
     "/" |> Path.join(path) |> URI.parse() |> URI.append_query("vsn=d") |> URI.to_string()
+  end
+
+  defp cache_enabled_path(path, false) do
+    "/" |> Path.join(path) |> URI.parse() |> URI.to_string()
   end
 
   defp cached_manifest(%{} = manifest) do

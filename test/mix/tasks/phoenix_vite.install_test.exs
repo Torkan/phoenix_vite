@@ -33,9 +33,6 @@ defmodule Mix.Tasks.PhoenixVite.InstallTest do
     |> Igniter.compose_task("phoenix_vite.install", [])
     |> assert_has_patch("assets/js/app.js", """
     1 + |import "vite/modulepreload-polyfill";
-    2 + |import "../css/app.css";
-    1  3   |// If you want to use Phoenix channels, run `mix help phx.gen.channel`
-    2  4   |// to get started and then uncomment the line below.
     """)
   end
 
@@ -60,12 +57,13 @@ defmodule Mix.Tasks.PhoenixVite.InstallTest do
           "phoenix": "workspace:*",
           "phoenix_html": "workspace:*",
           "phoenix_live_view": "workspace:*",
-          "tailwindcss": "^4.1.0",
           "topbar": "^3.0.0"
         },
         "devDependencies": {
-          "@tailwindcss/vite": "^4.1.10",
-          "vite": "^6.3.5"
+          "tailwindcss": "^4.1.0",
+          "daisyui": "^5.0.0",
+          "@tailwindcss/vite": "^4.1.0",
+          "vite": "^6.3.0"
         }
       }
       """)
