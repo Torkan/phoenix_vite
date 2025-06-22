@@ -2,7 +2,7 @@
 
 ```sh
 mix phx.new …
-mix igniter phoenix_vite
+mix igniter.install phoenix_vite
 mix deps.clean --unlock --unused
 mix deps.get
 mix assets.setup
