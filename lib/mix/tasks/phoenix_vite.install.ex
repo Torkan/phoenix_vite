@@ -1,11 +1,11 @@
 defmodule Mix.Tasks.PhoenixVite.Install do
-  @shortdoc "A short description of your task"
-  @example "mix phoenix_vite.install --example arg"
+  @shortdoc "Installer for Phoenix Vite"
+  @example "mix phoenix_vite.install --bun"
 
   @moduledoc """
   #{@shortdoc}
 
-  Longer explanation of your task
+  Sets a freshly generated phoenix app up to use the vite js build tool.
 
   ## Example
 
@@ -15,7 +15,7 @@ defmodule Mix.Tasks.PhoenixVite.Install do
 
   ## Options
 
-  * `--example-option` or `-e` - Docs for your option
+  * `--bun` or `-b` - Use the `:bun` elixir package to run vite.
   """
 
   if Code.ensure_loaded?(Igniter) do
@@ -254,7 +254,7 @@ defmodule Mix.Tasks.PhoenixVite.Install do
       end)
     end
 
-    def with_bun(%Igniter{} = igniter, callback) when is_function(callback, 1) do
+    defp with_bun(%Igniter{} = igniter, callback) when is_function(callback, 1) do
       if igniter.args.options[:bun] do
         callback.(igniter)
       else

@@ -3,12 +3,16 @@ defmodule PhoenixVite.MixProject do
 
   def project do
     [
+      name: "Phoenix Vite",
+      source_url: "https://github.com/LostKobrakai/phoenix_vite",
       app: :phoenix_vite,
       version: "0.1.0",
       elixir: "~> 1.18",
       start_permanent: Mix.env() == :prod,
       deps: deps(),
       aliases: aliases(),
+      description: description(),
+      package: package(),
       dialyzer: [plt_add_apps: [:mix]]
     ]
   end
@@ -26,7 +30,8 @@ defmodule PhoenixVite.MixProject do
       {:phoenix_live_view, "~> 1.0"},
       {:bun, "~> 1.4", optional: true, runtime: false},
       {:igniter, "~> 0.6", optional: true},
-      {:dialyxir, "~> 1.4", only: [:dev, :test], runtime: false}
+      {:dialyxir, "~> 1.4", only: [:dev, :test], runtime: false},
+      {:ex_doc, "~> 0.38", only: :dev, runtime: false, warn_if_outdated: true}
     ]
   end
 
@@ -41,6 +46,19 @@ defmodule PhoenixVite.MixProject do
         "cmd #{colored_mix} compile --force --warnings-as-errors",
         "cmd #{colored_mix} dialyzer#{if System.get_env("CI"), do: " --format github"}"
       ]
+    ]
+  end
+
+  defp description() do
+    "`PhoenixVite` integrates the `vite` built tool with `:phoenix`."
+  end
+
+  defp package() do
+    [
+      # These are the default files included in the package
+      files: ~w(lib priv .formatter.exs mix.exs README* LICENSE* CHANGELOG*),
+      licenses: ["Apache-2.0"],
+      links: %{"GitHub" => "https://github.com/LostKobrakai/phoenix_vite"}
     ]
   end
 end
