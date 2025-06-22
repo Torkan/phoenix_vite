@@ -72,6 +72,10 @@ jobs:
       - name: Install dependencies
         run: mix deps.get --check-locked
 
+      # Step: Install test dependency
+      - name: Install test dependency
+        run: mix archive.install hex phx_new --force
+
       # Step: Run a few useful checks upfront
       - name: Run a bunch of useful elixir level checks
         run: mix checks
