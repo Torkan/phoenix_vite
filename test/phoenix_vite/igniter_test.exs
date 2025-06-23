@@ -238,11 +238,7 @@ defmodule PhoenixVite.IgniterTest do
       phx_test_project()
       |> ViteIgniter.add_bun(:test, TestWeb.Endpoint)
       |> assert_has_patch("mix.exs", """
-      62 + |      {:bun, "~> 1.4",
-      63 + |       runtime: Mix.env() == :dev,
-      64 + |       github: "LostKobrakai/elixir_bun",
-      65 + |       branch: "LostKobrakai-patch-1",
-      66 + |       override: true}
+      62 + |      {:bun, "~> 1.5", runtime: Mix.env() == :dev}
       """)
     end
 
@@ -279,14 +275,14 @@ defmodule PhoenixVite.IgniterTest do
       |> assert_has_patch("mix.exs", """
       77    - |      "assets.setup": ["tailwind.install --if-missing", "esbuild.install --if-missing"],
       78    - |      "assets.build": ["tailwind test", "esbuild test"],
-         82 + |      "assets.setup": ["bun.install --if-missing", "bun assets install"],
-         83 + |      "assets.build": ["bun vite build"],
-      79 84   |      "assets.deploy": [
+         78 + |      "assets.setup": ["bun.install --if-missing", "bun assets install"],
+         79 + |      "assets.build": ["bun vite build"],
+      79 80   |      "assets.deploy": [
       80    - |        "tailwind test --minify",
       81    - |        "esbuild test --minify",
       82    - |        "phx.digest"
-         85 + |        "assets.build"
-      83 86   |      ]
+         81 + |        "assets.build"
+      83 82   |      ]
       """)
     end
   end

@@ -226,11 +226,7 @@ if Code.ensure_loaded?(Igniter) do
     def add_bun(igniter, app_name, endpoint) do
       igniter
       |> Igniter.Project.Deps.add_dep(
-        {:bun, "~> 1.4",
-         runtime: quote(do: Mix.env() == :dev),
-         github: "LostKobrakai/elixir_bun",
-         branch: "LostKobrakai-patch-1",
-         override: true},
+        {:bun, "~> 1.5", runtime: quote(do: Mix.env() == :dev)},
         append?: true
       )
       |> Igniter.Project.Config.configure("config.exs", :bun, [:version], "1.2.16")
