@@ -47,9 +47,9 @@ jobs:
           cache-name: cache-elixir-deps
         with:
           path: deps
-          key: ${{ runner.os }}-mix-${{ env.cache-name }}-${{ hashFiles('**/mix.lock') }}
+          key: ${{ runner.os }}-mix-${{matrix.pair.otp}}-${{ env.cache-name }}-${{ hashFiles('**/mix.lock') }}
           restore-keys: |
-            ${{ runner.os }}-mix-${{ env.cache-name }}-
+            ${{ runner.os }}-mix-${{matrix.pair.otp}}-${{ env.cache-name }}-
 
       - name: Cache compiled build
         id: cache-build
@@ -58,9 +58,11 @@ jobs:
           cache-name: cache-compiled-build
         with:
           path: _build
-          key: ${{ runner.os }}-mix-${{ env.cache-name }}-${{ hashFiles('**/mix.lock') }}
+          key: ${{ runner.os }}-mix-${{matrix.pair.otp}}-${{matrix.pair.elixir}}-${{ env.cache-name }}-${{ hashFiles('**/mix.lock') }}
           restore-keys: |
-            ${{ runner.os }}-mix-${{ env.cache-name }}-
+            ${{ runner.os }}-mix-${{matrix.pair.otp}}-${{matrix.pair.elixir}}-${{ env.cache-name }}-
+            ${{ runner.os }}-mix-${{matrix.pair.otp}}-${{matrix.pair.elixir}}-
+            ${{ runner.os }}-mix-${{matrix.pair.otp}}-
             ${{ runner.os }}-mix-
 
       - name: Install dependencies
