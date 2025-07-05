@@ -40,6 +40,34 @@ if Code.ensure_loaded?(Igniter) do
     end
 
     @doc """
+    Wrap known generated static assets paths with `static_url` calls
+    """
+    def update_generator_static_assets(igniter, web_module) do
+      web_folder = Macro.underscore(web_module)
+      app_layout_1_8 = Path.join(["lib", web_folder, "components/layouts.ex"])
+      app_layout_1_7 = Path.join(["lib", web_folder, "components/layouts/app.html.heex"])
+
+      cond do
+        Igniter.exists?(igniter, app_layout_1_8) ->
+          update_logo_path_with_static_url(igniter, app_layout_1_8)
+
+        Igniter.exists?(igniter, app_layout_1_7) ->
+          update_logo_path_with_static_url(igniter, app_layout_1_7)
+
+        true ->
+          igniter
+      end
+    end
+
+    defp update_logo_path_with_static_url(igniter, path) do
+      Igniter.update_file(igniter, path, fn source ->
+        Rewrite.Source.update(source, :content, fn content ->
+          String.replace(content, ~s|~p"/images/logo.svg"|, ~s|static_url(~p"/images/logo.svg")|)
+        end)
+      end)
+    end
+
+    @doc """
     Disable phoenix cache_static_manifest in favor of using vites manifest.
     """
     def use_only_vite_assets_caching(igniter, app_name, endpoint) do

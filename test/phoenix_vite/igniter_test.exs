@@ -43,6 +43,17 @@ defmodule PhoenixVite.IgniterTest do
     end
   end
 
+  describe "update_generator_static_assets/1" do
+    test "updates logo" do
+      phx_test_project()
+      |> ViteIgniter.update_generator_static_assets(TestWeb)
+      |> assert_has_patch("lib/test_web/components/layouts.ex", """
+      37     - |          <img src={~p"/images/logo.svg"} width="36" />
+          37 + |          <img src={static_url(~p"/images/logo.svg")} width="36" />
+      """)
+    end
+  end
+
   describe "use_only_vite_assets_caching/3" do
     test "removes cache_static_manifest config from prod.exs" do
       phx_test_project()

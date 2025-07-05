@@ -43,6 +43,7 @@ defmodule Mix.Tasks.PhoenixVite.Install do
         igniter
         |> PhoenixVite.Igniter.create_vite_config()
         |> PhoenixVite.Igniter.configure_dev_server_static_url_for_development(app_name, endpoint)
+        |> PhoenixVite.Igniter.update_generator_static_assets(web_module)
         |> PhoenixVite.Igniter.use_only_vite_assets_caching(app_name, endpoint)
         |> PhoenixVite.Igniter.add_module_preload_polyfill()
         |> PhoenixVite.Igniter.use_vite_public_folder_for_static_assets()
