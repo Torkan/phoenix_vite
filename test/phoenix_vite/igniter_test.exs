@@ -198,13 +198,10 @@ defmodule PhoenixVite.IgniterTest do
       |> ViteIgniter.adjust_js_dependency_management()
       |> assert_creates("assets/package.json", """
       {
-        "workspaces": [
-          "../deps/*"
-        ],
         "dependencies": {
-          "phoenix": "workspace:*",
-          "phoenix_html": "workspace:*",
-          "phoenix_live_view": "workspace:*",
+          "phoenix": "file:../deps/phoenix",
+          "phoenix_html": "file:../deps/phoenix_html",
+          "phoenix_live_view": "file:../deps/phoenix_live_view",
           "topbar": "^3.0.0"
         },
         "devDependencies": {

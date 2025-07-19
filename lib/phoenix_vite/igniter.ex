@@ -214,13 +214,10 @@ if Code.ensure_loaded?(Igniter) do
       igniter
       |> Igniter.create_new_file("assets/package.json", """
       {
-        "workspaces": [
-          "../deps/*"
-        ],
         "dependencies": {
-          "phoenix": "workspace:*",
-          "phoenix_html": "workspace:*",
-          "phoenix_live_view": "workspace:*",
+          "phoenix": "file:../deps/phoenix",
+          "phoenix_html": "file:../deps/phoenix_html",
+          "phoenix_live_view": "file:../deps/phoenix_live_view",
           "topbar": "^3.0.0"
         },
         "devDependencies": {
