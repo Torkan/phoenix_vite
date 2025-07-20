@@ -49,7 +49,7 @@ defmodule PhoenixVite.IgniterTest do
       |> ViteIgniter.update_generator_static_assets(TestWeb)
       |> assert_has_patch("lib/test_web/components/layouts.ex", """
       37     - |          <img src={~p"/images/logo.svg"} width="36" />
-          37 + |          <img src={static_url(~p"/images/logo.svg")} width="36" />
+          37 + |          <img src={static_url(@conn, ~p"/images/logo.svg")} width="36" />
       """)
     end
   end

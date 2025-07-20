@@ -62,7 +62,11 @@ if Code.ensure_loaded?(Igniter) do
     defp update_logo_path_with_static_url(igniter, path) do
       Igniter.update_file(igniter, path, fn source ->
         Rewrite.Source.update(source, :content, fn content ->
-          String.replace(content, ~s|~p"/images/logo.svg"|, ~s|static_url(~p"/images/logo.svg")|)
+          String.replace(
+            content,
+            ~s|~p"/images/logo.svg"|,
+            ~s|static_url(@conn, ~p"/images/logo.svg")|
+          )
         end)
       end)
     end
