@@ -9,6 +9,7 @@ if Code.ensure_loaded?(Igniter) do
     def create_vite_config(igniter) do
       Igniter.create_new_file(igniter, "assets/vite.config.mjs", """
       import { defineConfig } from 'vite'
+      import { phoenixVitePlugin } from 'phoenix_vite'
       import tailwindcss from "@tailwindcss/vite";
 
       export default defineConfig({
@@ -25,7 +26,10 @@ if Code.ensure_loaded?(Igniter) do
           outDir: "../priv/static",
           emptyOutDir: true,
         },
-        plugins: [tailwindcss()]
+        plugins: [
+          tailwindcss(),
+          phoenixVitePlugin()
+        ]
       });
       """)
     end
@@ -271,9 +275,10 @@ if Code.ensure_loaded?(Igniter) do
           "topbar": "^3.0.0"
         },
         "devDependencies": {
-          "tailwindcss": "^4.1.0",
-          "daisyui": "^5.0.0",
           "@tailwindcss/vite": "^4.1.0",
+          "daisyui": "^5.0.0",
+          "phoenix_vite": "file:../deps/phoenix_vite",
+          "tailwindcss": "^4.1.0",
           "vite": "^6.3.0"
         }
       }
@@ -351,7 +356,7 @@ if Code.ensure_loaded?(Igniter) do
         [endpoint, :watchers, :vite],
         {:code,
          Sourceror.parse_string!("""
-         {PhoenixVite, :run, ["npx", ~w(vite dev), [cd: "assets"]]}
+         {System, :cmd, ["npx", ~w(vite dev), [cd: "assets"]]}
          """)}
       )
       |> Igniter.Project.TaskAliases.modify_existing_alias("assets.setup", fn zipper ->

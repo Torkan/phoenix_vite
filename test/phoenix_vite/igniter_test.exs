@@ -9,6 +9,7 @@ defmodule PhoenixVite.IgniterTest do
       |> ViteIgniter.create_vite_config()
       |> assert_creates("assets/vite.config.mjs", """
       import { defineConfig } from 'vite'
+      import { phoenixVitePlugin } from 'phoenix_vite'
       import tailwindcss from "@tailwindcss/vite";
 
       export default defineConfig({
@@ -25,7 +26,10 @@ defmodule PhoenixVite.IgniterTest do
           outDir: "../priv/static",
           emptyOutDir: true,
         },
-        plugins: [tailwindcss()]
+        plugins: [
+          tailwindcss(),
+          phoenixVitePlugin()
+        ]
       });
       """)
     end
@@ -215,9 +219,10 @@ defmodule PhoenixVite.IgniterTest do
           "topbar": "^3.0.0"
         },
         "devDependencies": {
-          "tailwindcss": "^4.1.0",
-          "daisyui": "^5.0.0",
           "@tailwindcss/vite": "^4.1.0",
+          "daisyui": "^5.0.0",
+          "phoenix_vite": "file:../deps/phoenix_vite",
+          "tailwindcss": "^4.1.0",
           "vite": "^6.3.0"
         }
       }
@@ -310,7 +315,7 @@ defmodule PhoenixVite.IgniterTest do
       phx_test_project()
       |> ViteIgniter.add_local_node(:test, TestWeb.Endpoint)
       |> assert_has_patch("config/dev.exs", """
-      20 + |    vite: {PhoenixVite, :run, ["npx", ~w(vite dev), [cd: "assets"]]}
+      20 + |    vite: {System, :cmd, ["npx", ~w(vite dev), [cd: "assets"]]}
       """)
     end
 
