@@ -73,6 +73,16 @@ defmodule PhoenixVite.IgniterTest do
     end
   end
 
+  describe "use_only_vite_reloading_for_assets/3" do
+    test "removes assets patterns config from dev.exs" do
+      phx_test_project()
+      |> ViteIgniter.use_only_vite_reloading_for_assets(:test, TestWeb.Endpoint)
+      |> assert_has_patch("config/dev.exs", """
+      60    - |      ~r"priv/static/(?!uploads/).*(js|css|png|jpeg|jpg|gif|svg)$",
+      """)
+    end
+  end
+
   describe "add_module_preload_polyfill/1" do
     test "updates the app.js with the polyfill import" do
       igniter =

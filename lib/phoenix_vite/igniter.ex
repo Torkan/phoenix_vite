@@ -1,6 +1,7 @@
 if Code.ensure_loaded?(Igniter) do
   defmodule PhoenixVite.Igniter do
     @moduledoc false
+    alias Sourceror.Zipper
 
     @doc """
     Create a minimal vite config at `assets/vite.config.mjs`
@@ -90,6 +91,51 @@ if Code.ensure_loaded?(Igniter) do
         {:code,
          Sourceror.parse_string!("PhoenixVite.cache_static_manifest_latest(#{inspect(app_name)})")}
       )
+    end
+
+    @doc """
+    Remove assets patterns from phoenix_live_reload
+
+    Assets reloading is handled by the vite dev server, not phoenix_live_reload
+    """
+    def use_only_vite_reloading_for_assets(igniter, app_name, endpoint) do
+      Igniter.update_elixir_file(igniter, "config/dev.exs", fn zipper ->
+        with {:ok, zipper} <-
+               Igniter.Code.Function.move_to_function_call_in_current_scope(
+                 zipper,
+                 :config,
+                 3,
+                 fn function_call ->
+                   Igniter.Code.Function.argument_equals?(function_call, 0, app_name) &&
+                     Igniter.Code.Function.argument_equals?(function_call, 1, endpoint) &&
+                     Igniter.Code.Function.argument_matches_predicate?(
+                       function_call,
+                       2,
+                       fn zipper ->
+                         Igniter.Code.Keyword.keyword_has_path?(zipper, [:live_reload, :patterns])
+                       end
+                     )
+                 end
+               ) do
+          Igniter.Code.Function.update_nth_argument(zipper, 2, fn zipper ->
+            Igniter.Code.Keyword.put_in_keyword(
+              zipper,
+              [:live_reload, :patterns],
+              [],
+              fn zipper ->
+                Igniter.Code.List.remove_from_list(zipper, fn zipper ->
+                  with {:sigil_r, _, [{:<<>>, _, [regex]}, []]} <- Zipper.node(zipper),
+                       true <- String.contains?(regex, "priv/static") do
+                    true
+                  else
+                    _ -> false
+                  end
+                end)
+              end
+            )
+          end)
+        end
+      end)
     end
 
     @doc """
