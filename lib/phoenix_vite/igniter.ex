@@ -199,6 +199,28 @@ if Code.ensure_loaded?(Igniter) do
     end
 
     @doc """
+    Handle browsers favicon requests by redirecting to the vite dev server.
+    """
+    def add_favicon_handling_plug(igniter, endpoint) do
+      Igniter.Project.Module.find_and_update_module!(igniter, endpoint, fn zipper ->
+        with {:ok, zipper} <-
+               Igniter.Code.Common.move_to_last(zipper, &match?({:use, _, _}, Zipper.node(&1))),
+             zipper = Igniter.Code.Common.add_code(zipper, "import PhoenixVite.Plug"),
+             {:ok, zipper} <-
+               Igniter.Code.Common.move_to_last(
+                 zipper,
+                 &match?({:socket, _, [_, _, _]}, Zipper.node(&1))
+               ) do
+          plug = """
+          plug :favicon, dev_server: {PhoenixVite.Components, :has_vite_watcher?, [__MODULE__]}
+          """
+
+          {:ok, Igniter.Code.Common.add_code(zipper, plug)}
+        end
+      end)
+    end
+
+    @doc """
     Replace static assets relations in root layout with dynamic vite ones.
     """
     def link_root_layout_to_vite(igniter, app_name, endpoint, web_module) do

@@ -132,6 +132,22 @@ defmodule PhoenixVite.IgniterTest do
     end
   end
 
+  describe "add_favicon_handling_plug/2" do
+    test "updates the endpoint with the import and plug" do
+      phx_test_project()
+      |> ViteIgniter.add_favicon_handling_plug(TestWeb.Endpoint)
+      |> assert_has_patch("lib/test_web/endpoint.ex", """
+      2  2   |  use Phoenix.Endpoint, otp_app: :test
+         3 + |  import PhoenixVite.Plug
+      """)
+      |> assert_has_patch("lib/test_web/endpoint.ex", """
+         20 + |  plug :favicon, dev_server: {PhoenixVite.Components, :has_vite_watcher?, [__MODULE__]}
+         21 + |
+      19 22   |  # Serve at "/" the static files from "priv/static" directory.
+      """)
+    end
+  end
+
   describe "link_root_layout_to_vite/4" do
     test "updates root layout with phoenix_vite component usage" do
       igniter =

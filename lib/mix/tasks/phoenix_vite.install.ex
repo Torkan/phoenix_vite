@@ -61,6 +61,7 @@ defmodule Mix.Tasks.PhoenixVite.Install do
         |> PhoenixVite.Igniter.use_only_vite_reloading_for_assets(app_name, endpoint)
         |> PhoenixVite.Igniter.add_module_preload_polyfill()
         |> PhoenixVite.Igniter.use_vite_public_folder_for_static_assets()
+        |> PhoenixVite.Igniter.add_favicon_handling_plug(endpoint)
         |> PhoenixVite.Igniter.link_root_layout_to_vite(app_name, endpoint, web_module)
         |> PhoenixVite.Igniter.remove_default_assets_handling(app_name, endpoint)
         |> PhoenixVite.Igniter.adjust_js_dependency_management()
