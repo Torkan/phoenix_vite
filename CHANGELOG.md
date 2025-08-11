@@ -7,7 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.0] - 2025-08-11
+
 - Update app layout known static assets ([#1](https://github.com/LostKobrakai/phoenix_vite/issues/1))
+- Ship a small vite plugin
+  - properly shut down when using npm ([#7](https://github.com/LostKobrakai/phoenix_vite/issues/7))
+  - Make HMR with `:phoenix_live_reload`s `:notify` work ([#8](https://github.com/LostKobrakai/phoenix_vite/issues/8))
+- Fixed mix task when igniter is not available
+- Generate vite optimization config ([#9](https://github.com/LostKobrakai/phoenix_vite/issues/9))
 
 ## [0.2.2] - 2025-07-03
 

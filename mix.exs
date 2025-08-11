@@ -6,7 +6,7 @@ defmodule PhoenixVite.MixProject do
       name: "Phoenix Vite",
       source_url: "https://github.com/LostKobrakai/phoenix_vite",
       app: :phoenix_vite,
-      version: "0.2.2",
+      version: "0.3.0",
       elixir: "~> 1.18",
       start_permanent: Mix.env() == :prod,
       deps: deps(),
