@@ -6,7 +6,7 @@ defmodule PhoenixVite.MixProject do
       name: "Phoenix Vite",
       source_url: "https://github.com/LostKobrakai/phoenix_vite",
       app: :phoenix_vite,
-      version: "0.3.0",
+      version: "0.3.1",
       elixir: "~> 1.18",
       start_permanent: Mix.env() == :prod,
       deps: deps(),
@@ -56,7 +56,7 @@ defmodule PhoenixVite.MixProject do
   defp package() do
     [
       # These are the default files included in the package
-      files: ~w(lib priv .formatter.exs mix.exs README* LICENSE* CHANGELOG*),
+      files: ~w(lib priv .formatter.exs mix.exs package.json README* LICENSE* CHANGELOG*),
       licenses: ["Apache-2.0"],
       links: %{"GitHub" => "https://github.com/LostKobrakai/phoenix_vite"}
     ]
