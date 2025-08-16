@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.1] - 2025-08-14
+
+- Publish to hex including package.json ([#15](https://github.com/LostKobrakai/phoenix_vite/issues/15))
+
 ## [0.3.0] - 2025-08-11
 
 - Update app layout known static assets ([#1](https://github.com/LostKobrakai/phoenix_vite/issues/1))
@@ -37,7 +41,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Integration with bun elixir package
 - Igniter installer
 
-[unreleased]: https://github.com/LostKobrakai/phoenix_vite/compare/v0.3.0...HEAD
+[unreleased]: https://github.com/LostKobrakai/phoenix_vite/compare/v0.3.1...HEAD
+[0.3.1]: https://github.com/LostKobrakai/phoenix_vite/releases/tag/v0.3.1
 [0.3.0]: https://github.com/LostKobrakai/phoenix_vite/releases/tag/v0.3.0
 [0.2.2]: https://github.com/LostKobrakai/phoenix_vite/releases/tag/v0.2.2
 [0.2.1]: https://github.com/LostKobrakai/phoenix_vite/releases/tag/v0.2.1
