@@ -28,6 +28,14 @@ defmodule Mix.Tasks.PhoenixVite.InstallTest do
         outDir: "../priv/static",
         emptyOutDir: true,
       },
+      // LV Colocated JS and Hooks
+      // https://hexdocs.pm/phoenix_live_view/Phoenix.LiveView.ColocatedJS.html#module-internals
+      resolve: {
+        alias: {
+          "@": ".",
+          "phoenix-colocated": `${process.env.MIX_BUILD_PATH}/phoenix-colocated`,
+        },
+      },
       plugins: [
         tailwindcss(),
         phoenixVitePlugin({

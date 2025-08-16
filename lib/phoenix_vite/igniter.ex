@@ -30,6 +30,14 @@ if Code.ensure_loaded?(Igniter) do
           outDir: "../priv/static",
           emptyOutDir: true,
         },
+        // LV Colocated JS and Hooks
+        // https://hexdocs.pm/phoenix_live_view/Phoenix.LiveView.ColocatedJS.html#module-internals
+        resolve: {
+          alias: {
+            "@": ".",
+            "phoenix-colocated": `${process.env.MIX_BUILD_PATH}/phoenix-colocated`,
+          },
+        },
         plugins: [
           tailwindcss(),
           phoenixVitePlugin({
@@ -349,7 +357,9 @@ if Code.ensure_loaded?(Igniter) do
         :bun,
         [:vite],
         {:code,
-         Sourceror.parse_string!(~s|[args: ~w(x vite), cd: Path.expand("../assets", __DIR__)]|)}
+         Sourceror.parse_string!(
+           ~s|[args: ~w(x vite), cd: Path.expand("../assets", __DIR__), env: %{"MIX_BUILD_PATH" => Mix.Project.build_path()}]|
+         )}
       )
       |> Igniter.Project.Config.configure(
         "dev.exs",

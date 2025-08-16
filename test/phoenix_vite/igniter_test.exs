@@ -30,6 +30,14 @@ defmodule PhoenixVite.IgniterTest do
           outDir: "../priv/static",
           emptyOutDir: true,
         },
+        // LV Colocated JS and Hooks
+        // https://hexdocs.pm/phoenix_live_view/Phoenix.LiveView.ColocatedJS.html#module-internals
+        resolve: {
+          alias: {
+            "@": ".",
+            "phoenix-colocated": `${process.env.MIX_BUILD_PATH}/phoenix-colocated`,
+          },
+        },
         plugins: [
           tailwindcss(),
           phoenixVitePlugin({
@@ -58,8 +66,8 @@ defmodule PhoenixVite.IgniterTest do
       phx_test_project()
       |> ViteIgniter.update_generator_static_assets(TestWeb)
       |> assert_has_patch("lib/test_web/components/layouts.ex", """
-      37     - |          <img src={~p"/images/logo.svg"} width="36" />
-          37 + |          <img src={static_url(@conn, ~p"/images/logo.svg")} width="36" />
+      41     - |          <img src={~p"/images/logo.svg"} width="36" />
+          41 + |          <img src={static_url(@conn, ~p"/images/logo.svg")} width="36" />
       """)
     end
   end
@@ -189,17 +197,17 @@ defmodule PhoenixVite.IgniterTest do
       |> assert_has_patch("config/config.exs", """
       34    - |# Configure esbuild (the version is required)
       35    - |config :esbuild,
-      36    - |  version: "0.17.11",
+      36    - |  version: "0.25.4",
       37    - |  test: [
       38    - |    args:
-      39    - |      ~w(js/app.js --bundle --target=es2022 --outdir=../priv/static/assets/js --external:/fonts/* --external:/images/*),
+      39    - |      ~w(js/app.js --bundle --target=es2022 --outdir=../priv/static/assets/js --external:/fonts/* --external:/images/* --alias:@=.),
       40    - |    cd: Path.expand("../assets", __DIR__),
-      41    - |    env: %{"NODE_PATH" => Path.expand("../deps", __DIR__)}
+      41    - |    env: %{"NODE_PATH" => [Path.expand("../deps", __DIR__), Mix.Project.build_path()]}
       42    - |  ]
       43    - |
       44    - |# Configure tailwind (the version is required)
       45    - |config :tailwind,
-      46    - |  version: "4.0.9",
+      46    - |  version: "4.1.7",
       47    - |  test: [
       48    - |    args: ~w(
       49    - |      --input=assets/css/app.css
@@ -215,8 +223,8 @@ defmodule PhoenixVite.IgniterTest do
       phx_test_project()
       |> ViteIgniter.remove_default_assets_handling(:test, TestWeb.Endpoint)
       |> assert_has_patch("mix.exs", """
-      45    - |      {:esbuild, "~> 0.9", runtime: Mix.env() == :dev},
-      46    - |      {:tailwind, "~> 0.3", runtime: Mix.env() == :dev},
+      52    - |      {:esbuild, "~> 0.10", runtime: Mix.env() == :dev},
+      53    - |      {:tailwind, "~> 0.3", runtime: Mix.env() == :dev},
       """)
     end
 
@@ -260,8 +268,8 @@ defmodule PhoenixVite.IgniterTest do
         "assets/vendor/daisyui-theme.js"
       ])
       |> assert_has_patch("assets/js/app.js", """
-      25    - |import topbar from "../vendor/topbar"
-         25 + |import topbar from "topbar"
+      26    - |import topbar from "../vendor/topbar"
+         26 + |import topbar from "topbar"
       """)
       |> assert_has_patch("assets/css/app.css", """
       16     - |@plugin "../vendor/daisyui" {
@@ -283,7 +291,7 @@ defmodule PhoenixVite.IgniterTest do
       phx_test_project()
       |> ViteIgniter.add_bun(:test, TestWeb.Endpoint)
       |> assert_has_patch("mix.exs", """
-      62 + |      {:bun, "~> 1.5", runtime: Mix.env() == :dev}
+      69 + |      {:bun, "~> 1.5", runtime: Mix.env() == :dev}
       """)
     end
 
@@ -294,8 +302,11 @@ defmodule PhoenixVite.IgniterTest do
       10 + |config :bun,
       11 + |  version: "1.2.16",
       12 + |  assets: [args: [], cd: Path.expand("../assets", __DIR__)],
-      13 + |  vite: [args: ~w(x vite), cd: Path.expand("../assets", __DIR__)]
-      14 + |
+      13 + |  vite: [
+      14 + |    args: ~w(x vite),
+      15 + |    cd: Path.expand("../assets", __DIR__),
+      16 + |    env: %{"MIX_BUILD_PATH" => Mix.Project.build_path()}
+      17 + |  ]
       """)
     end
 
@@ -318,16 +329,16 @@ defmodule PhoenixVite.IgniterTest do
       phx_test_project()
       |> ViteIgniter.add_bun(:test, TestWeb.Endpoint)
       |> assert_has_patch("mix.exs", """
-      77    - |      "assets.setup": ["tailwind.install --if-missing", "esbuild.install --if-missing"],
-      78    - |      "assets.build": ["tailwind test", "esbuild test"],
-         78 + |      "assets.setup": ["bun.install --if-missing", "bun assets install"],
-         79 + |      "assets.build": ["bun vite build"],
-      79 80   |      "assets.deploy": [
-      80    - |        "tailwind test --minify",
-      81    - |        "esbuild test --minify",
-      82    - |        "phx.digest"
-         81 + |        "assets.build"
-      83 82   |      ]
+      84    - |      "assets.setup": ["tailwind.install --if-missing", "esbuild.install --if-missing"],
+      85    - |      "assets.build": ["tailwind test", "esbuild test"],
+         85 + |      "assets.setup": ["bun.install --if-missing", "bun assets install"],
+         86 + |      "assets.build": ["bun vite build"],
+      86 87   |      "assets.deploy": [
+      87    - |        "tailwind test --minify",
+      88    - |        "esbuild test --minify",
+      89    - |        "phx.digest"
+         88 + |        "assets.build"
+      90 89   |      ]
       """)
     end
   end
@@ -351,16 +362,16 @@ defmodule PhoenixVite.IgniterTest do
       phx_test_project()
       |> ViteIgniter.add_local_node(:test, TestWeb.Endpoint)
       |> assert_has_patch("mix.exs", """
-      77    - |      "assets.setup": ["tailwind.install --if-missing", "esbuild.install --if-missing"],
-      78    - |      "assets.build": ["tailwind test", "esbuild test"],
-         77 + |      "assets.setup": ["cmd --cd assets npm install"],
-         78 + |      "assets.build": ["cmd --cd assets npx vite build"],
-      79 79   |      "assets.deploy": [
-      80    - |        "tailwind test --minify",
-      81    - |        "esbuild test --minify",
-      82    - |        "phx.digest"
-         80 + |        "assets.build"
-      83 81   |      ]
+      84    - |      "assets.setup": ["tailwind.install --if-missing", "esbuild.install --if-missing"],
+      85    - |      "assets.build": ["tailwind test", "esbuild test"],
+         84 + |      "assets.setup": ["cmd --cd assets npm install"],
+         85 + |      "assets.build": ["cmd --cd assets npx vite build"],
+      86 86   |      "assets.deploy": [
+      87    - |        "tailwind test --minify",
+      88    - |        "esbuild test --minify",
+      89    - |        "phx.digest"
+         87 + |        "assets.build"
+      90 88   |      ]
       """)
     end
   end

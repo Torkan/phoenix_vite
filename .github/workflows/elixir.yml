@@ -69,7 +69,7 @@ jobs:
         run: mix deps.get --check-locked
 
       - name: Install test dependency
-        run: mix archive.install hex phx_new 1.8.0-rc.3 --force
+        run: mix archive.install hex phx_new 1.8.0 --force
 
       - name: Run a bunch of useful elixir level checks
         run: mix checks
