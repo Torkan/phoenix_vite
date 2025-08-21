@@ -61,30 +61,30 @@ if Code.ensure_loaded?(Igniter) do
     @doc """
     Wrap known generated static assets paths with `static_url` calls
     """
-    def update_generator_static_assets(igniter, web_module) do
+    def update_generator_static_assets(igniter, web_module, endpoint) do
       web_folder = Macro.underscore(web_module)
       app_layout_1_8 = Path.join(["lib", web_folder, "components/layouts.ex"])
       app_layout_1_7 = Path.join(["lib", web_folder, "components/layouts/app.html.heex"])
 
       cond do
         Igniter.exists?(igniter, app_layout_1_8) ->
-          update_logo_path_with_static_url(igniter, app_layout_1_8)
+          update_logo_path_with_static_url(igniter, endpoint, app_layout_1_8)
 
         Igniter.exists?(igniter, app_layout_1_7) ->
-          update_logo_path_with_static_url(igniter, app_layout_1_7)
+          update_logo_path_with_static_url(igniter, endpoint, app_layout_1_7)
 
         true ->
           igniter
       end
     end
 
-    defp update_logo_path_with_static_url(igniter, path) do
+    defp update_logo_path_with_static_url(igniter, endpoint, path) do
       Igniter.update_file(igniter, path, fn source ->
         Rewrite.Source.update(source, :content, fn content ->
           String.replace(
             content,
             ~s|~p"/images/logo.svg"|,
-            ~s|static_url(@conn, ~p"/images/logo.svg")|
+            ~s|static_url(#{inspect(endpoint)}, ~p"/images/logo.svg")|
           )
         end)
       end)

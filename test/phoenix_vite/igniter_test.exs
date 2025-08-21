@@ -64,10 +64,10 @@ defmodule PhoenixVite.IgniterTest do
   describe "update_generator_static_assets/1" do
     test "updates logo" do
       phx_test_project()
-      |> ViteIgniter.update_generator_static_assets(TestWeb)
+      |> ViteIgniter.update_generator_static_assets(TestWeb, TestWeb.Endpoint)
       |> assert_has_patch("lib/test_web/components/layouts.ex", """
       41     - |          <img src={~p"/images/logo.svg"} width="36" />
-          41 + |          <img src={static_url(@conn, ~p"/images/logo.svg")} width="36" />
+          41 + |          <img src={static_url(TestWeb.Endpoint, ~p"/images/logo.svg")} width="36" />
       """)
     end
   end
