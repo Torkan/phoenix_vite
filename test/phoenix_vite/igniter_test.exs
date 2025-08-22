@@ -344,11 +344,25 @@ defmodule PhoenixVite.IgniterTest do
   end
 
   describe "add_local_node/3" do
+    test "configures profiles" do
+      phx_test_project()
+      |> ViteIgniter.add_local_node(:test, TestWeb.Endpoint)
+      |> assert_has_patch("config/config.exs", """
+      10 + |config :phoenix_vite, PhoenixVite.Npm,
+      11 + |  assets: [args: [], cd: Path.expand("../assets", __DIR__)],
+      12 + |  vite: [
+      13 + |    args: ~w(exec -- vite),
+      14 + |    cd: Path.expand("../assets", __DIR__),
+      15 + |    env: %{"MIX_BUILD_PATH" => Mix.Project.build_path()}
+      16 + |  ]
+      """)
+    end
+
     test "configures endpoint watcher" do
       phx_test_project()
       |> ViteIgniter.add_local_node(:test, TestWeb.Endpoint)
       |> assert_has_patch("config/dev.exs", """
-      20 + |    vite: {System, :cmd, ["npx", ~w(vite dev), [cd: "assets"]]}
+      20 + |    vite: {PhoenixVite.Npm, :run, [:vite, ~w(dev)]}
       """)
     end
 
@@ -364,8 +378,8 @@ defmodule PhoenixVite.IgniterTest do
       |> assert_has_patch("mix.exs", """
       84    - |      "assets.setup": ["tailwind.install --if-missing", "esbuild.install --if-missing"],
       85    - |      "assets.build": ["tailwind test", "esbuild test"],
-         84 + |      "assets.setup": ["cmd --cd assets npm install"],
-         85 + |      "assets.build": ["cmd --cd assets npx vite build"],
+         84 + |      "assets.setup": ["phoenix_vite.npm assets install"],
+         85 + |      "assets.build": ["phoenix_vite.npm vite build"],
       86 86   |      "assets.deploy": [
       87    - |        "tailwind test --minify",
       88    - |        "esbuild test --minify",
