@@ -2,6 +2,7 @@ if Code.ensure_loaded?(Igniter) do
   defmodule PhoenixVite.Igniter do
     @moduledoc false
     alias Sourceror.Zipper
+    alias Igniter.Code.Function
 
     @doc """
     Create a minimal vite config at `assets/vite.config.mjs`
@@ -81,11 +82,15 @@ if Code.ensure_loaded?(Igniter) do
     defp update_logo_path_with_static_url(igniter, endpoint, path) do
       Igniter.update_file(igniter, path, fn source ->
         Rewrite.Source.update(source, :content, fn content ->
-          String.replace(
-            content,
-            ~s|~p"/images/logo.svg"|,
-            ~s|static_url(#{inspect(endpoint)}, ~p"/images/logo.svg")|
-          )
+          if String.contains?(content, ~s|static_url(#{inspect(endpoint)}, ~p"/images/logo.svg")|) do
+            content
+          else
+            String.replace(
+              content,
+              ~s|~p"/images/logo.svg"|,
+              ~s|static_url(#{inspect(endpoint)}, ~p"/images/logo.svg")|
+            )
+          end
         end)
       end)
     end
@@ -164,7 +169,13 @@ if Code.ensure_loaded?(Igniter) do
     def add_module_preload_polyfill(igniter) do
       Igniter.update_file(igniter, "assets/js/app.js", fn source ->
         Rewrite.Source.update(source, :content, fn content ->
-          ~s|import "vite/modulepreload-polyfill";\n| <> content
+          import_line = ~s|import "vite/modulepreload-polyfill";|
+
+          if String.contains?(content, import_line) do
+            content
+          else
+            import_line <> "\n" <> content
+          end
         end)
       end)
     end
@@ -209,25 +220,56 @@ if Code.ensure_loaded?(Igniter) do
     end
 
     @doc """
-    Handle browsers favicon requests by redirecting to the vite dev server.
+    Add PhoenixVite.Plug import to the endpoint if it doesn't already exist.
     """
-    def add_favicon_handling_plug(igniter, endpoint) do
-      Igniter.Project.Module.find_and_update_module!(igniter, endpoint, fn zipper ->
-        with {:ok, zipper} <-
-               Igniter.Code.Common.move_to_last(zipper, &match?({:use, _, _}, Zipper.node(&1))),
-             zipper = Igniter.Code.Common.add_code(zipper, "import PhoenixVite.Plug"),
-             {:ok, zipper} <-
-               Igniter.Code.Common.move_to_last(
-                 zipper,
-                 &match?({:socket, _, [_, _, _]}, Zipper.node(&1))
-               ) do
-          plug = """
-          plug :favicon, dev_server: {PhoenixVite.Components, :has_vite_watcher?, [__MODULE__]}
-          """
+    def add_phoenix_vite_plug_import(igniter, endpoint) do
+      endpoint_path = Igniter.Project.Module.proper_location(igniter, endpoint)
+      igniter = Igniter.include_existing_file(igniter, endpoint_path)
 
-          {:ok, Igniter.Code.Common.add_code(zipper, plug)}
-        end
-      end)
+      endpoint_file = Map.get(igniter.rewrite.sources, endpoint_path)
+      file_content = endpoint_file.content
+      import_exists = String.contains?(file_content, "import PhoenixVite.Plug")
+
+      if import_exists do
+        igniter
+      else
+        Igniter.Project.Module.find_and_update_module!(igniter, endpoint, fn zipper ->
+          with {:ok, zipper} <-
+                 Igniter.Code.Common.move_to_last(zipper, &match?({:use, _, _}, Zipper.node(&1))) do
+            {:ok, Igniter.Code.Common.add_code(zipper, "import PhoenixVite.Plug")}
+          end
+        end)
+      end
+    end
+
+    @doc """
+    Add favicon plug to the endpoint if it doesn't already exist.
+    """
+    def add_favicon_plug(igniter, endpoint) do
+      endpoint_path = Igniter.Project.Module.proper_location(igniter, endpoint)
+      igniter = Igniter.include_existing_file(igniter, endpoint_path)
+      endpoint_file = Map.get(igniter.rewrite.sources, endpoint_path)
+
+      file_content = endpoint_file.content
+      favicon_exists = String.contains?(file_content, "plug :favicon")
+
+      if favicon_exists do
+        igniter
+      else
+        Igniter.Project.Module.find_and_update_module!(igniter, endpoint, fn zipper ->
+          with {:ok, zipper} <-
+                 Igniter.Code.Common.move_to_last(
+                   zipper,
+                   &match?({:socket, _, [_, _, _]}, Zipper.node(&1))
+                 ) do
+            plug = """
+            plug :favicon, dev_server: {PhoenixVite.Components, :has_vite_watcher?, [__MODULE__]}
+            """
+
+            {:ok, Igniter.Code.Common.add_code(zipper, plug)}
+          end
+        end)
+      end
     end
 
     @doc """
@@ -280,7 +322,16 @@ if Code.ensure_loaded?(Igniter) do
           end
 
         igniter
-        |> Igniter.Project.Config.remove_application_configuration("config.exs", dependency)
+        |> Igniter.update_elixir_file("config/config.exs", fn zipper ->
+          predicate = &Function.argument_equals?(&1, 0, dependency)
+
+          zipper
+          |> Function.move_to_function_call_in_current_scope(:config, [2, 3], predicate)
+          |> case do
+            :error -> {:ok, zipper}
+            {:ok, zipper} -> Sourceror.Zipper.remove(zipper)
+          end
+        end)
         |> Igniter.Project.Deps.remove_dep(dependency)
         |> Igniter.add_task("deps.clean", ["--unlock", "--unused", "#{dependency}"])
       end)
@@ -291,23 +342,27 @@ if Code.ensure_loaded?(Igniter) do
     """
     def adjust_js_dependency_management(igniter) do
       igniter
-      |> Igniter.create_new_file("assets/package.json", """
-      {
-        "dependencies": {
-          "phoenix": "file:../deps/phoenix",
-          "phoenix_html": "file:../deps/phoenix_html",
-          "phoenix_live_view": "file:../deps/phoenix_live_view",
-          "topbar": "^3.0.0"
-        },
-        "devDependencies": {
-          "@tailwindcss/vite": "^4.1.0",
-          "daisyui": "^5.0.0",
-          "phoenix_vite": "file:../deps/phoenix_vite",
-          "tailwindcss": "^4.1.0",
-          "vite": "^6.3.0"
+      |> Igniter.create_new_file(
+        "assets/package.json",
+        """
+        {
+          "dependencies": {
+            "phoenix": "file:../deps/phoenix",
+            "phoenix_html": "file:../deps/phoenix_html",
+            "phoenix_live_view": "file:../deps/phoenix_live_view",
+            "topbar": "^3.0.0"
+          },
+          "devDependencies": {
+            "@tailwindcss/vite": "^4.1.0",
+            "daisyui": "^5.0.0",
+            "phoenix_vite": "file:../deps/phoenix_vite",
+            "tailwindcss": "^4.1.0",
+            "vite": "^6.3.0"
+          }
         }
-      }
-      """)
+        """,
+        on_exists: :warning
+      )
       |> Igniter.update_file("assets/js/app.js", fn source ->
         Rewrite.Source.update(source, :content, fn content ->
           String.replace(content, "../vendor/topbar", "topbar")
@@ -320,9 +375,27 @@ if Code.ensure_loaded?(Igniter) do
           |> String.replace("../vendor/daisyui", "daisyui")
         end)
       end)
-      |> Igniter.rm("assets/vendor/topbar.js")
-      |> Igniter.rm("assets/vendor/daisyui.js")
-      |> Igniter.rm("assets/vendor/daisyui-theme.js")
+      |> then(fn igniter ->
+        if Igniter.exists?(igniter, "assets/vendor/topbar.js") do
+          Igniter.rm(igniter, "assets/vendor/topbar.js")
+        else
+          igniter
+        end
+      end)
+      |> then(fn igniter ->
+        if Igniter.exists?(igniter, "assets/vendor/daisyui.js") do
+          Igniter.rm(igniter, "assets/vendor/daisyui.js")
+        else
+          igniter
+        end
+      end)
+      |> then(fn igniter ->
+        if Igniter.exists?(igniter, "assets/vendor/daisyui-theme.js") do
+          Igniter.rm(igniter, "assets/vendor/daisyui-theme.js")
+        else
+          igniter
+        end
+      end)
     end
 
     @doc """

@@ -145,7 +145,8 @@ defmodule PhoenixVite.IgniterTest do
   describe "add_favicon_handling_plug/2" do
     test "updates the endpoint with the import and plug" do
       phx_test_project()
-      |> ViteIgniter.add_favicon_handling_plug(TestWeb.Endpoint)
+      |> ViteIgniter.add_phoenix_vite_plug_import(TestWeb.Endpoint)
+      |> ViteIgniter.add_favicon_plug(TestWeb.Endpoint)
       |> assert_has_patch("lib/test_web/endpoint.ex", """
       2  2   |  use Phoenix.Endpoint, otp_app: :test
          3 + |  import PhoenixVite.Plug
