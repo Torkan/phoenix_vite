@@ -291,7 +291,7 @@ defmodule PhoenixVite.IgniterTest do
       phx_test_project()
       |> ViteIgniter.add_bun(:test, TestWeb.Endpoint)
       |> assert_has_patch("mix.exs", """
-      69 + |      {:bun, "~> 1.5", runtime: Mix.env() == :dev}
+      69 + |      {:bun, "~> 1.5 and >= 1.5.1", runtime: Mix.env() == :dev}
       """)
     end
 
@@ -330,7 +330,7 @@ defmodule PhoenixVite.IgniterTest do
       |> ViteIgniter.add_bun(:test, TestWeb.Endpoint)
       |> assert_has_patch("mix.exs", """
       84    - |      "assets.setup": ["tailwind.install --if-missing", "esbuild.install --if-missing"],
-      85    - |      "assets.build": ["tailwind test", "esbuild test"],
+      85    - |      "assets.build": ["compile", "tailwind test", "esbuild test"],
          85 + |      "assets.setup": ["bun.install --if-missing", "bun assets install"],
          86 + |      "assets.build": ["bun vite build"],
       86 87   |      "assets.deploy": [
@@ -377,7 +377,7 @@ defmodule PhoenixVite.IgniterTest do
       |> ViteIgniter.add_local_node(:test, TestWeb.Endpoint)
       |> assert_has_patch("mix.exs", """
       84    - |      "assets.setup": ["tailwind.install --if-missing", "esbuild.install --if-missing"],
-      85    - |      "assets.build": ["tailwind test", "esbuild test"],
+      85    - |      "assets.build": ["compile", "tailwind test", "esbuild test"],
          84 + |      "assets.setup": ["phoenix_vite.npm assets install"],
          85 + |      "assets.build": ["phoenix_vite.npm vite build"],
       86 86   |      "assets.deploy": [

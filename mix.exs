@@ -28,7 +28,7 @@ defmodule PhoenixVite.MixProject do
   defp deps do
     [
       {:phoenix_live_view, "~> 1.0"},
-      {:bun, "~> 1.5", optional: true, runtime: false},
+      {:bun, "~> 1.5 and >= 1.5.1", optional: true, runtime: false},
       {:igniter, "~> 0.6", optional: true},
       {:dialyxir, "~> 1.4", only: [:dev, :test], runtime: false},
       {:ex_doc, "~> 0.38", only: :dev, runtime: false, warn_if_outdated: true}

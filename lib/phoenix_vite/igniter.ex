@@ -263,8 +263,6 @@ if Code.ensure_loaded?(Igniter) do
     Remove esbuild and tailwind applications and integrations
     """
     def remove_default_assets_handling(igniter, app_name, endpoint) do
-      alias Igniter.Code.Function
-
       Enum.reduce([:esbuild, :tailwind], igniter, fn dependency, igniter ->
         igniter =
           if endpoint do
@@ -282,16 +280,7 @@ if Code.ensure_loaded?(Igniter) do
           end
 
         igniter
-        |> Igniter.update_elixir_file("config/config.exs", fn zipper ->
-          predicate = &Function.argument_equals?(&1, 0, dependency)
-
-          zipper
-          |> Function.move_to_function_call_in_current_scope(:config, [2, 3], predicate)
-          |> case do
-            :error -> {:ok, zipper}
-            {:ok, zipper} -> Sourceror.Zipper.remove(zipper)
-          end
-        end)
+        |> Igniter.Project.Config.remove_application_configuration("config.exs", dependency)
         |> Igniter.Project.Deps.remove_dep(dependency)
         |> Igniter.add_task("deps.clean", ["--unlock", "--unused", "#{dependency}"])
       end)
@@ -342,7 +331,7 @@ if Code.ensure_loaded?(Igniter) do
     def add_bun(igniter, app_name, endpoint) do
       igniter
       |> Igniter.Project.Deps.add_dep(
-        {:bun, "~> 1.5", runtime: quote(do: Mix.env() == :dev)},
+        {:bun, "~> 1.5 and >= 1.5.1", runtime: quote(do: Mix.env() == :dev)},
         append?: true
       )
       |> Igniter.Project.Config.configure("config.exs", :bun, [:version], "1.2.16")
