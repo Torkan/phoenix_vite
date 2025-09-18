@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.0] - 2025-09-18
+
+- Update to `:bun` `~> 1.5 and >= 1.5.1` for not stopping given the changes in 0.3.0 [[#18](https://github.com/LostKobrakai/phoenix_vite/issues/18)]
+- Update tests for `:phoenix` 1.8.1 generators
+
 ## [0.3.3] - 2025-08-22
 
 - Make node work with the colocated aliases [[#16](https://github.com/LostKobrakai/phoenix_vite/issues/16)]
@@ -51,7 +56,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Integration with bun elixir package
 - Igniter installer
 
-[unreleased]: https://github.com/LostKobrakai/phoenix_vite/compare/v0.3.3...HEAD
+[unreleased]: https://github.com/LostKobrakai/phoenix_vite/compare/v0.4.0...HEAD
+[0.4.0]: https://github.com/LostKobrakai/phoenix_vite/releases/tag/v0.4.0
 [0.3.3]: https://github.com/LostKobrakai/phoenix_vite/releases/tag/v0.3.3
 [0.3.2]: https://github.com/LostKobrakai/phoenix_vite/releases/tag/v0.3.2
 [0.3.1]: https://github.com/LostKobrakai/phoenix_vite/releases/tag/v0.3.1
